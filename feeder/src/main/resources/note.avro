@@ -1,0 +1,14 @@
+{
+      "namespace": "pl.ftang.example.feeder.avro",
+      "name": "Note",
+      "type": "record",
+      "fields": [
+          {"name": "id", "type": "long"},
+          {"name": "event_case_id", "type": "string"},
+          {"name": "event_msisdn", "type": "string"},
+          {"name": "note", "type": [ "null", "string"]},
+          {"name": "created_date", "type": ["null", "string"]},
+          {"name": "event_category", "type": ["null", "string"]},
+          {"name": "city", "type": ["null", "string"]},
+          {"name": "address", "type": ["null", "string"]} ]
+}

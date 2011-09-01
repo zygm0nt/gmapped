@@ -1,0 +1,6 @@
+#add-point { float:left; } 
+div.input { padding:3px 0; } 
+label { display:block; font-size:80%; } 
+input, select { width:150px; } 
+button { float:right; } 
+div.error { color:red; font-weight:bold; }

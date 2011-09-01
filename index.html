@@ -1,0 +1,170 @@
+<html>
+<head>
+<title>GMapped - Google Maps mapped points</title>
+<script type="text/javascript" src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=API_KEY"></script>
+<script type="text/javascript" src="javascripts/jquery-1.4.4.min.js"></script>
+<script type="text/javascript" src="javascripts/jquery.gmap-1.1.0-min.js"></script>
+<script type="text/javascript" src="javascripts/jquery.timers-1.2.js"></script>
+<style type="text/css" media="screen">
+    #map { float:left; width:500px; height:500px; }
+    #list { float:left; width:200px; background:#eee; list-style:none; padding:0; }
+    #list li { padding:10px; }
+    #list li:hover { background:#555; color:#fff; cursor:pointer; cursor:hand; }
+    #message { background:#555; color:#fff; position:absolute; display:none; width:100px; padding:5px; }
+    #add-point { float:left; }
+    div.input { padding:3px 0; }
+    label { display:block; font-size:80%; }
+    input, select { width:150px; }
+    button { float:right; }
+    div.error { color:red; font-weight:bold; }
+</style>
+<script type="text/javascript">
+$(function() {
+    var map = new GMap2(document.getElementById('map'));
+    var burnsvilleMN = new GLatLng(52.025459,19.204102);
+    map.setCenter(burnsvilleMN, 7);
+    map.setUIToDefault();
+    var bounds = new GLatLngBounds();
+    var geo = new GClientGeocoder();
+
+    var reasons=[];
+    reasons[G_GEO_SUCCESS] = "Success";
+    reasons[G_GEO_MISSING_ADDRESS] = "Missing Address";
+    reasons[G_GEO_UNKNOWN_ADDRESS] = "Unknown Address.";
+    reasons[G_GEO_UNAVAILABLE_ADDRESS]= "Unavailable Address";
+    reasons[G_GEO_BAD_KEY] = "Bad API Key";
+    reasons[G_GEO_TOO_MANY_QUERIES] = "Too Many Queries";
+    reasons[G_GEO_SERVER_ERROR] = "Server error";
+
+    $("#add-point").submit(function(){
+        geoEncode_from_button();
+        return false;
+    });
+
+    var ajaxUrl = 'http://localhost:5984/example/_design/simple_views/_view/by_date?callback=?&startkey="#docId#"&limit=5';
+    //var startWith = '006-000003462763-48519104162';
+    var startWith = '2010-5-5.16.16. 14. 0';
+
+    $(document).everyTime(2000, function(i) {
+        //alert(startWith);
+        $("<li />").html(startWith).click(function() { ; }).appendTo("#list2");
+        $.getJSON(ajaxUrl.replace("#docId#", startWith), loadSales);
+    });
+
+
+    function loadSales(data) {  
+           //$("#sales").append("<table border=\"1\"/>");
+           for (i in data.rows) {  
+            doc = data.rows[i].value;
+            html = '<tr>' +
+            '<td>' + doc.event_case_id + '</td>' +
+            '<td>' + doc.event_msisdn + '</td>' +
+            '<td>' + doc.first_name + " " + doc.last_name + '</td>' +
+            '<td>' + doc.event_category + '</td>' +
+            '<td>' + doc.city + '</td>' +
+            '<td>' + doc.address+ '</td>' +
+            '</tr>';
+            startWith = doc.created_date;
+            $("#sales > table").append(html);  
+            $("#startkeys > table").append('<tr><td>ABC' + this.startWith + '</td></tr>');
+
+            geoEncode(doc.city + ", " + doc.address, doc.first_name + " " + doc.last_name);
+            setTimeout( function() {  }, 1000 );
+             }  
+    }
+
+    function geoEncode_from_button() {
+        var address = $("#add-point input[name=address]").val();
+        geoEncode(address, document.getElementById("name").value);
+    }
+    
+    function geoEncode(address, name) {
+        geo.getLocations(address, function (result){
+            if (result.Status.code == G_GEO_SUCCESS) {
+                geocode = result.Placemark[0].Point.coordinates;
+                //savePoint(geocode);
+                addLocation(getLocationData(geocode, name));
+                zoomToBounds();
+            } else {
+                var reason="Code "+result.Status.code;
+                if (reasons[result.Status.code]) {
+                    reason = reasons[result.Status.code]
+                }
+                $("#add-point .error").html(reason).fadeIn();
+                geocode = false;
+            }
+        });
+    }
+
+    function getLocationData(geocode, name) {
+        //var data = $("#add-point :input").serializeArray();
+        var location = new Array();
+        location['lng'] = geocode[0];
+        location["lat"] = geocode[1];
+        location['name'] = name;
+        return location;
+    }
+
+    function addLocation(location) {
+        var point = new GLatLng(location.lat, location.lng);
+        var marker = new GMarker(point);
+        map.addOverlay(marker);
+        bounds.extend(marker.getPoint());
+
+        $("<li />")
+            .html(location.name)
+            .click(function(){
+                showMessage(marker, location.name);
+            })
+            .appendTo("#list");
+
+        GEvent.addListener(marker, "click", function(){
+            showMessage(this, location.name);
+        });
+    }
+
+    $("#message").appendTo( map.getPane(G_MAP_FLOAT_SHADOW_PANE) );
+
+    function showMessage(marker, text){
+        var markerOffset = map.fromLatLngToDivPixel(marker.getPoint());
+        $("#message").hide().fadeIn()
+            .css({ top:markerOffset.y, left:markerOffset.x })
+            .html(text);
+    }
+
+    function zoomToBounds() {
+        map.setCenter(bounds.getCenter());
+        //map.setZoom(map.getBoundsZoomLevel(bounds)-1);
+    }
+});
+</script>
+</head>
+<body>
+<!--form id="add-point"action="map-service.php"method="POST">
+  <input type="hidden"name="action"value="savepoint"id="action">
+  <fieldset>
+    <legend>Add a Point to the Map</legend>
+    <div class="error" style="display:none;"></div>
+    <div class="input">
+      <label for="name">Location Name</label>
+      <input type="text"name="name"id="name"value="">
+    </div>
+    <div class="input">
+      <label for="address">Address</label>
+      <input type="text"name="address"id="address"value="">
+    </div>
+    <button type="submit">Add Point</button>
+  </fieldset>
+</form-->
+
+
+<div id="map" style="width: 800px; height: 800px; border: 1px solid #777;"></div>
+<ul id="list"></ul>
+<div id="message"></div>
+
+<div id="sales">
+    <table border="1"/>
+</div>
+
+<ul id="list2"></ul>
+</body>

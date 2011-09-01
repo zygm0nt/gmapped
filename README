@@ -1,0 +1,15 @@
+
+-.,
+ |
+ +-- index.html      - the following 3 are the files for the frontend :)
+ +-- javascripts
+ +-- style.css
+ |
+ +-- feeder          - core of the application
+ |
+ +-- script.sh       - couchdb sample queries with curl
+ |
+ +-- python          - some sample code on json parsing in python
+ +-- rabbitmq        - failed attempt to connect to rabbitmq with python
+
+
