@@ -11,5 +11,5 @@
  |
  +-- python          - some sample code on json parsing in python
  +-- rabbitmq        - failed attempt to connect to rabbitmq with python
-
+ +-- couchdb         - couchdb views
 
